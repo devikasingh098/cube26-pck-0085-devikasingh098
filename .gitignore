@@ -7,3 +7,6 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+# Generated inspection records and evidence
+data/inspection_records/*
+!data/inspection_records/.gitkeep

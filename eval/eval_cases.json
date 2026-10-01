@@ -1,0 +1,118 @@
+[
+  {
+    "test_id": "TEST-01",
+    "name": "Correct package — happy path",
+    "unit_id": "UNIT-0006",
+    "org_id": "org_demo_bravo",
+    "expected_contents": "USB-C Cable × 1",
+    "test_image_description": "Open box containing one USB-C cable, label visible",
+    "expected_checks": {
+      "item_identification": "PASS",
+      "quantity_verification": "PASS",
+      "order_matching": "PASS"
+    },
+    "expected_decision": "SEAL",
+    "rationale": "All expected items present in correct quantities, no extra items. All three checks should PASS and the backend policy should return SEAL."
+  },
+  {
+    "test_id": "TEST-02",
+    "name": "Wrong item",
+    "unit_id": "UNIT-0044",
+    "org_id": "org_demo_alpha",
+    "expected_contents": "Candle × 1",
+    "observed_in_box": "Water Bottle × 1",
+    "test_image_description": "Open box containing a water bottle, no candle visible",
+    "expected_checks": {
+      "item_identification": "FAIL",
+      "quantity_verification": "FAIL",
+      "order_matching": "FAIL"
+    },
+    "expected_decision": "STOP_AND_FIX",
+    "rationale": "Clearly different item is present. The expected candle is absent and a different item (bottle) is visible instead."
+  },
+  {
+    "test_id": "TEST-03",
+    "name": "Ambiguous or blurry image — UNCERTAIN",
+    "unit_id": "UNIT-0006",
+    "org_id": "org_demo_bravo",
+    "expected_contents": "USB-C Cable × 1",
+    "test_image_description": "Deliberately blurry, dark, or low-resolution photo where contents cannot be identified",
+    "expected_checks": {
+      "item_identification": "UNCERTAIN",
+      "quantity_verification": "UNCERTAIN",
+      "order_matching": "UNCERTAIN"
+    },
+    "expected_decision": "STOP_AND_FIX",
+    "rationale": "UNCERTAIN is a first-class outcome. Insufficient visual evidence must not produce PASS. When any check is UNCERTAIN, the deterministic policy returns STOP_AND_FIX."
+  },
+  {
+    "test_id": "TEST-04",
+    "name": "Extra item present",
+    "unit_id": "UNIT-0027",
+    "org_id": "org_demo_bravo",
+    "expected_contents": "Puzzle × 1",
+    "observed_in_box": "Puzzle × 1 + USB-C Cable × 1",
+    "test_image_description": "Open box with 500-piece puzzle AND a USB-C cable (unexpected)",
+    "expected_checks": {
+      "item_identification": "PASS",
+      "quantity_verification": "PASS",
+      "order_matching": "FAIL"
+    },
+    "expected_decision": "STOP_AND_FIX",
+    "rationale": "Expected item (puzzle) is present in correct quantity, but an extra item (cable) that was not ordered is clearly visible. order_matching must be FAIL."
+  },
+  {
+    "test_id": "TEST-05",
+    "name": "Wrong quantity",
+    "unit_id": "UNIT-0033",
+    "org_id": "org_demo_bravo",
+    "expected_contents": "Protein Powder × 2",
+    "test_image_description": "Open box containing only one protein powder container (expected two)",
+    "expected_checks": {
+      "item_identification": "PASS",
+      "quantity_verification": "FAIL",
+      "order_matching": "FAIL"
+    },
+    "expected_decision": "STOP_AND_FIX",
+    "rationale": "Item is correctly identified as protein powder, but only 1 is visible when 2 are expected. quantity_verification and order_matching should FAIL."
+  },
+  {
+    "test_id": "TEST-06",
+    "name": "Gemini failure — fail-open",
+    "unit_id": "UNIT-0006",
+    "org_id": "org_demo_bravo",
+    "test_setup": "Use invalid API key or simulate network error",
+    "expected_checks": "no checks (AI unavailable)",
+    "expected_decision": "PENDING_REVIEW",
+    "expected_status": "pending",
+    "expected_http_status": 200,
+    "rationale": "Fail-open is mandatory. If Gemini fails: (1) images must already be saved, (2) record is saved with status=pending, (3) decision is PENDING_REVIEW, (4) HTTP 200 is returned, (5) operator is not blocked."
+  },
+  {
+    "test_id": "TEST-07",
+    "name": "Multiple photos of same package — single Gemini call",
+    "unit_id": "UNIT-0006",
+    "org_id": "org_demo_bravo",
+    "expected_contents": "USB-C Cable × 1",
+    "test_images": [
+      "photo_1_front_of_box.jpg",
+      "photo_2_inside_box.jpg",
+      "photo_3_shipping_label.jpg"
+    ],
+    "expected_behaviour": "All 3 images sent in ONE Gemini call. Evidence combined. No double-counting. One record created.",
+    "expected_decision": "SEAL (if photos show correct contents)",
+    "rationale": "Multiple images for one package must be combined in a single Gemini call. The prompt explicitly instructs no double-counting. The system should not make 3 separate AI calls."
+  },
+  {
+    "test_id": "TEST-08",
+    "name": "Cross-organisation access — tenancy isolation",
+    "setup": [
+      "Step 1: Inspect UNIT-0006 (belongs to org_demo_bravo)",
+      "Step 2: Note the record_id returned",
+      "Step 3: Request GET /api/records/<record_id>?org=org_demo_alpha"
+    ],
+    "expected_http_status": 404,
+    "expected_response": "record not found for organisation org_demo_alpha",
+    "rationale": "Tenancy isolation must prevent cross-org access. Records physically live in org-scoped directories. A caller with the correct record_id but wrong org must receive 404."
+  }
+]

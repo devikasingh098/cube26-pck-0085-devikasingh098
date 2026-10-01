@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pack Manager — AI-assisted outbound package inspection for the CUBE Buildathon. Evidence-based SEAL or STOP & FIX decisions.">
+    <title>Pack Manager | CUBE Buildathon 2026</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ===========================
+           DESIGN TOKENS
+           =========================== */
+        :root {
+            --purple-900: #4c1d95;
+            --purple-700: #6d28d9;
+            --purple-600: #7c3aed;
+            --purple-500: #8b5cf6;
+            --purple-100: #ede9fe;
+            --purple-50:  #f5f3ff;
+
+            --green-700:  #15803d;
+            --green-600:  #16a34a;
+            --green-100:  #dcfce7;
+            --green-50:   #f0fdf4;
+
+            --red-700:    #b91c1c;
+            --red-600:    #dc2626;
+            --red-100:    #fee2e2;
+            --red-50:     #fef2f2;
+
+            --amber-700:  #b45309;
+            --amber-100:  #fef3c7;
+            --amber-50:   #fffbeb;
+
+            --orange-700: #c2410c;
+            --orange-100: #fed7aa;
+            --orange-50:  #fff7ed;
+
+            --gray-900:   #111827;
+            --gray-700:   #374151;
+            --gray-600:   #4b5563;
+            --gray-500:   #6b7280;
+            --gray-400:   #9ca3af;
+            --gray-300:   #d1d5db;
+            --gray-200:   #e5e7eb;
+            --gray-100:   #f3f4f6;
+            --gray-50:    #f9fafb;
+            --white:      #ffffff;
+
+            --radius-sm:  8px;
+            --radius-md:  12px;
+            --radius-lg:  18px;
+            --radius-xl:  24px;
+
+            --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md:  0 4px 16px rgba(0,0,0,0.08);
+            --shadow-lg:  0 8px 30px rgba(0,0,0,0.10);
+
+            --font: 'Inter', Arial, sans-serif;
+        }
+
+        /* ===========================
+           RESET + BASE
+           =========================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font);
+            background: linear-gradient(160deg, #f0eeff 0%, #eef2ff 50%, #f3f4f6 100%);
+            color: var(--gray-900);
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ===========================
+           NAVBAR
+           =========================== */
+        .navbar {
+            background: linear-gradient(135deg, var(--purple-900) 0%, var(--purple-600) 100%);
+            color: white;
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(109,40,217,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 1px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 6px rgba(74,222,128,0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.5; }
+        }
+
+        .nav-badge {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 5px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* ===========================
+           LAYOUT
+           =========================== */
+        .container {
+            max-width: 1280px;
+            margin: 30px auto;
+            padding: 0 28px;
+        }
+
+        /* ===========================
+           STATS
+           =========================== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 26px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-100);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.15s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .stat-icon.total   { background: var(--purple-100); }
+        .stat-icon.seal    { background: var(--green-100); }
+        .stat-icon.stop    { background: var(--red-100); }
+        .stat-icon.pending { background: var(--orange-100); }
+
+        .stat-info {}
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--gray-900);
+            line-height: 1.1;
+        }
+
+        /* ===========================
+           MAIN GRID
+           =========================== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            margin-bottom: 26px;
+        }
+
+        /* ===========================
+           CARDS
+           =========================== */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-100);
+        }
+
+        .card-header {
+            margin-bottom: 22px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 4px;
+        }
+
+        .card-header p {
+            color: var(--gray-500);
+            font-size: 13px;
+        }
+
+        /* ===========================
+           FORM ELEMENTS
+           =========================== */
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row input[type="text"] {
+            flex: 1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: var(--font);
+            outline: none;
+            color: var(--gray-900);
+            transition: border-color 0.15s, box-shadow 0.15s;
+            background: var(--white);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--purple-500);
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+        }
+
+        input[type="file"] { display: none; }
+
+        /* ===========================
+           ORDER PREVIEW
+           =========================== */
+        .order-preview {
+            background: var(--purple-50);
+            border: 1.5px solid var(--purple-100);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .order-preview.visible {
+            display: block;
+        }
+
+        .order-preview-header {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--purple-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .order-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .order-meta-item {}
+
+        .order-meta-label {
+            font-size: 10px;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        .order-meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .expected-items {
+            margin-top: 8px;
+        }
+
+        .expected-item-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-top: 1px solid var(--purple-100);
+        }
+
+        .expected-item-row:first-child {
+            border-top: none;
+        }
+
+        .item-qty-badge {
+            background: var(--purple-600);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            min-width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .item-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-800);
+        }
+
+        .item-sku {
+            font-size: 10px;
+            color: var(--gray-400);
+            margin-top: 1px;
+        }
+
+        .order-error {
+            color: var(--red-700);
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* ===========================
+           UPLOAD AREA
+           =========================== */
+        .upload-area {
+            border: 2px dashed var(--purple-100);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            background: var(--purple-50);
+            transition: border-color 0.15s;
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--purple-600);
+            background: var(--purple-100);
+        }
+
+        .upload-empty {
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: var(--purple-100);
+            color: var(--purple-600);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .upload-empty h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--gray-700);
+        }
+
+        .upload-empty p {
+            color: var(--gray-400);
+            font-size: 12px;
+        }
+
+        .attachments {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .attachment-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            position: relative;
+            transition: box-shadow 0.15s;
+        }
+
+        .attachment-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .attachment-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+            background: var(--gray-100);
+        }
+
+        .attachment-info {
+            padding: 9px 11px;
+        }
+
+        .attachment-name {
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 22px;
+            color: var(--gray-700);
+        }
+
+        .attachment-size {
+            font-size: 10px;
+            color: var(--gray-400);
+            margin-top: 2px;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 26px;
+            height: 26px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .remove-btn:hover { background: var(--red-600); }
+
+        .add-more-btn {
+            margin-top: 12px;
+            width: 100%;
+            padding: 11px;
+            border: 1.5px dashed var(--purple-500);
+            border-radius: var(--radius-md);
+            background: var(--purple-50);
+            color: var(--purple-700);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: var(--font);
+            transition: background 0.15s;
+        }
+
+        .add-more-btn:hover { background: var(--purple-100); }
+
+        .photo-count {
+            font-size: 11px;
+            color: var(--gray-500);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* ===========================
+           INSPECT BUTTON
+           =========================== */
+        .inspect-btn {
+            width: 100%;
+            margin-top: 18px;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--purple-700), var(--purple-500));
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            letter-spacing: 0.2px;
+        }
+
+        .inspect-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(109,40,217,0.3);
+        }
+
+        .inspect-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===========================
+           RESULT PANEL
+           =========================== */
+        .result-empty {
+            min-height: 380px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--gray-400);
+            flex-direction: column;
+        }
+
+        .result-empty-icon { font-size: 48px; margin-bottom: 14px; }
+
+        .result-content { display: none; }
+
+        /* ===========================
+           DECISION BOX
+           =========================== */
+        .decision {
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .decision.seal {
+            background: var(--green-50);
+            border: 1.5px solid var(--green-100);
+        }
+
+        .decision.stop {
+            background: var(--red-50);
+            border: 1.5px solid var(--red-100);
+        }
+
+        .decision.pending {
+            background: var(--orange-50);
+            border: 1.5px solid var(--orange-100);
+        }
+
+        .decision-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .decision-info {}
+
+        .decision-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .decision.seal .decision-title { color: var(--green-700); }
+        .decision.stop .decision-title { color: var(--red-700); }
+        .decision.pending .decision-title { color: var(--orange-700); }
+
+        .decision-subtitle {
+            margin-top: 3px;
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+
+        /* ===========================
+           META GRID
+           =========================== */
+        .meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .meta-box {
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            padding: 11px 13px;
+            border: 1px solid var(--gray-100);
+        }
+
+        .meta-label {
+            font-size: 10px;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .meta-value {
+            font-size: 13px;
+            font-weight: 600;
+            word-break: break-all;
+            color: var(--gray-900);
+        }
+
+        /* ===========================
+           CHECKS
+           =========================== */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray-700);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .check {
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            padding: 13px 15px;
+            margin-bottom: 9px;
+            transition: border-color 0.15s;
+        }
+
+        .check.check-pass  { border-left: 4px solid var(--green-600); }
+        .check.check-fail  { border-left: 4px solid var(--red-600); }
+        .check.check-uncertain { border-left: 4px solid #d97706; }
+
+        .check-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .check-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .verdict {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            flex-shrink: 0;
+        }
+
+        .verdict.pass      { background: var(--green-100); color: var(--green-700); }
+        .verdict.fail      { background: var(--red-100);   color: var(--red-700); }
+        .verdict.uncertain { background: var(--amber-100); color: var(--amber-700); }
+
+        .check-confidence {
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
+
+        .check-detail {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--gray-600);
+            line-height: 1.55;
+        }
+
+        /* ===========================
+           REASON BOX
+           =========================== */
+        .reason-box {
+            background: var(--gray-50);
+            border-radius: var(--radius-md);
+            padding: 13px 15px;
+            margin-top: 12px;
+            border: 1px solid var(--gray-100);
+        }
+
+        .reason-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 5px;
+        }
+
+        .reason-text {
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--gray-600);
+        }
+
+        /* ===========================
+           EVIDENCE SECTION
+           =========================== */
+        .evidence-section {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--gray-100);
+        }
+
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .evidence-box {
+            background: var(--gray-50);
+            border-radius: var(--radius-sm);
+            padding: 9px 11px;
+            border: 1px solid var(--gray-100);
+        }
+
+        .evidence-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 3px;
+        }
+
+        .evidence-value {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-700);
+            word-break: break-all;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .status-badge.completed { background: var(--green-100); color: var(--green-700); }
+        .status-badge.pending   { background: var(--amber-100); color: var(--amber-700); }
+        .status-badge.error     { background: var(--red-100);   color: var(--red-700); }
+
+        /* ===========================
+           ERROR / WARNING BANNERS
+           =========================== */
+        .error-banner {
+            background: var(--red-50);
+            border: 1.5px solid var(--red-100);
+            color: var(--red-700);
+            padding: 12px 15px;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        .warning-banner {
+            background: var(--orange-50);
+            border: 1.5px solid var(--orange-100);
+            color: var(--orange-700);
+            padding: 12px 15px;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        .info-banner {
+            background: var(--purple-50);
+            border: 1.5px solid var(--purple-100);
+            color: var(--purple-700);
+            padding: 12px 15px;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        /* ===========================
+           HISTORY SECTION
+           =========================== */
+        .history-section {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--gray-100);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .history-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .history-header p {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 3px;
+        }
+
+        .org-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .org-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px solid var(--gray-200);
+            background: var(--white);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font);
+            color: var(--gray-600);
+            transition: all 0.15s;
+        }
+
+        .org-btn.active {
+            background: var(--purple-600);
+            border-color: var(--purple-600);
+            color: white;
+        }
+
+        .org-btn:hover:not(.active) {
+            border-color: var(--purple-300);
+            color: var(--purple-700);
+        }
+
+        .history-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 9px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            border-bottom: 1.5px solid var(--gray-100);
+            white-space: nowrap;
+        }
+
+        .history-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-700);
+            vertical-align: middle;
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .history-table tr:hover td {
+            background: var(--gray-50);
+            cursor: pointer;
+        }
+
+        .history-table .record-id-cell {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--gray-500);
+        }
+
+        .decision-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .decision-chip.seal    { background: var(--green-100); color: var(--green-700); }
+        .decision-chip.stop    { background: var(--red-100);   color: var(--red-700); }
+        .decision-chip.pending { background: var(--amber-100); color: var(--amber-700); }
+
+        .history-empty {
+            text-align: center;
+            color: var(--gray-400);
+            padding: 40px 0;
+            font-size: 13px;
+        }
+
+        .refresh-btn {
+            padding: 7px 14px;
+            border: 1.5px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            background: var(--white);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font);
+            color: var(--gray-600);
+            transition: all 0.15s;
+        }
+
+        .refresh-btn:hover {
+            border-color: var(--purple-400);
+            color: var(--purple-700);
+        }
+
+        /* ===========================
+           MODAL
+           =========================== */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: var(--gray-100);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-500);
+            transition: background 0.15s;
+        }
+
+        .modal-close:hover {
+            background: var(--gray-200);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .modal-subtitle {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-bottom: 22px;
+        }
+
+        .modal-section {
+            margin-bottom: 20px;
+        }
+
+        .modal-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--gray-400);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .modal-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .modal-loading {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--gray-400);
+        }
+
+        /* ===========================
+           OVERRIDE SECTION
+           =========================== */
+        .override-section {
+            background: var(--amber-50);
+            border: 1.5px solid var(--amber-100);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-top: 12px;
+        }
+
+        .override-section h4 {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--amber-700);
+            margin-bottom: 8px;
+        }
+
+        .override-entry {
+            font-size: 12px;
+            color: var(--gray-700);
+            margin-bottom: 6px;
+        }
+
+        .override-original {
+            text-decoration: line-through;
+            color: var(--gray-400);
+        }
+
+        /* ===========================
+           RESPONSIVE
+           =========================== */
+        @media (max-width: 900px) {
+            .stats      { grid-template-columns: repeat(2, 1fr); }
+            .main-grid  { grid-template-columns: 1fr; }
+            .meta       { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .navbar     { padding: 0 16px; }
+            .container  { padding: 0 16px; margin-top: 20px; }
+            .stats      { grid-template-columns: repeat(2, 1fr); }
+            .attachments { grid-template-columns: 1fr; }
+            .modal      { padding: 22px 18px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- =============================
+     NAVBAR
+     ============================= -->
+<nav class="navbar">
+    <div class="brand">
+        <div class="brand-icon">📦</div>
+        <div class="brand-text">
+            <h1>Pack Manager</h1>
+            <p>AI-assisted package readiness inspection</p>
+        </div>
+    </div>
+    <div class="nav-right">
+        <div class="ai-status" id="aiStatus">
+            <div class="status-dot"></div>
+            <span>AI Inspection Ready</span>
+        </div>
+        <div class="nav-badge">CUBE Buildathon · Round 2</div>
+    </div>
+</nav>
+
+
+<div class="container">
+
+<!-- =============================
+     STATS
+     ============================= -->
+<div class="stats">
+
+    <div class="stat-card">
+        <div class="stat-icon total">📊</div>
+        <div class="stat-info">
+            <div class="stat-label">Total Inspections</div>
+            <div class="stat-number" id="stat-total">—</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon seal">✅</div>
+        <div class="stat-info">
+            <div class="stat-label">Sealed</div>
+            <div class="stat-number" id="stat-seal">—</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon stop">⛔</div>
+        <div class="stat-info">
+            <div class="stat-label">Stop & Fix</div>
+            <div class="stat-number" id="stat-stop">—</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon pending">⏳</div>
+        <div class="stat-info">
+            <div class="stat-label">Pending Review</div>
+            <div class="stat-number" id="stat-pending">—</div>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- =============================
+     MAIN GRID
+     ============================= -->
+<div class="main-grid">
+
+
+    <!-- LEFT: INSPECTION FORM -->
+    <div class="card">
+
+        <div class="card-header">
+            <h2>New Inspection</h2>
+            <p>Enter Unit ID, upload package evidence, then inspect.</p>
+        </div>
+
+        <form id="inspectionForm">
+
+            <!-- Unit ID -->
+            <div class="input-group">
+                <label for="unit_id">Pack Unit ID</label>
+                <div class="input-row">
+                    <input
+                        type="text"
+                        id="unit_id"
+                        name="unit_id"
+                        placeholder="e.g. UNIT-0006"
+                        autocomplete="off"
+                    >
+                </div>
+                <div class="order-error" id="orderError"></div>
+            </div>
+
+            <!-- Order Preview -->
+            <div class="order-preview" id="orderPreview">
+                <div class="order-preview-header">📋 Expected Order</div>
+                <div class="order-meta-grid">
+                    <div class="order-meta-item">
+                        <div class="order-meta-label">Order ID</div>
+                        <div class="order-meta-value" id="previewOrderId">—</div>
+                    </div>
+                    <div class="order-meta-item">
+                        <div class="order-meta-label">Channel</div>
+                        <div class="order-meta-value" id="previewChannel">—</div>
+                    </div>
+                </div>
+                <div class="expected-items" id="previewItems"></div>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="input-group">
+                <label>Package Evidence Photos</label>
+                <div class="upload-area" id="uploadArea">
+
+                    <!-- Empty state -->
+                    <div class="upload-empty" id="uploadEmpty" onclick="openFilePicker()">
+                        <div class="upload-icon">📷</div>
+                        <h3>Add package photos</h3>
+                        <p>Click to upload · JPEG, PNG, WebP · Max 20MB each</p>
+                    </div>
+
+                    <!-- Thumbnails -->
+                    <div class="attachments" id="attachments"></div>
+
+                    <!-- Add more -->
+                    <button
+                        type="button"
+                        class="add-more-btn"
+                        id="addMoreBtn"
+                        onclick="openFilePicker(event)"
+                        style="display:none;"
+                    >
+                        + Add Another Photo
+                    </button>
+
+                </div>
+
+                <div class="photo-count" id="photoCount" style="display:none;"></div>
+
+                <!-- Hidden file input -->
+                <input
+                    type="file"
+                    id="package_image"
+                    name="package_image"
+                    accept="image/*"
+                    multiple
+                    onchange="handleAttachments(this)"
+                >
+            </div>
+
+
+            <button
+                type="submit"
+                class="inspect-btn"
+                id="inspectButton"
+            >
+                🔍 Inspect Package
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- RIGHT: RESULT PANEL -->
+    <div class="card">
+
+        <div class="card-header">
+            <h2>Inspection Result</h2>
+            <p>AI inspection evidence and Pack Manager decision.</p>
+        </div>
+
+
+        <!-- Empty state -->
+        <div class="result-empty" id="resultEmpty">
+            <div class="result-empty-icon">📋</div>
+            <p>Submit an inspection to see the result.</p>
+        </div>
+
+
+        <!-- Result -->
+        <div class="result-content" id="resultContent">
+
+            <!-- Decision -->
+            <div class="decision" id="decisionBox">
+                <div class="decision-icon" id="decisionIcon"></div>
+                <div class="decision-info">
+                    <div class="decision-title" id="decisionTitle"></div>
+                    <div class="decision-subtitle" id="decisionSubtitle"></div>
+                </div>
+            </div>
+
+
+            <!-- Meta -->
+            <div class="meta">
+                <div class="meta-box">
+                    <div class="meta-label">Pack Unit</div>
+                    <div class="meta-value" id="resultUnit">—</div>
+                </div>
+                <div class="meta-box">
+                    <div class="meta-label">Order</div>
+                    <div class="meta-value" id="resultOrder">—</div>
+                </div>
+                <div class="meta-box">
+                    <div class="meta-label">Model</div>
+                    <div class="meta-value" id="resultModel">—</div>
+                </div>
+                <div class="meta-box">
+                    <div class="meta-label">Latency</div>
+                    <div class="meta-value" id="resultLatency">—</div>
+                </div>
+            </div>
+
+
+            <!-- Checks -->
+            <div class="section-title">Inspection Checks</div>
+            <div id="checksContainer"></div>
+
+
+            <!-- Reason -->
+            <div class="reason-box" id="reasonBox" style="display:none;">
+                <div class="reason-label">AI Observation Summary</div>
+                <div class="reason-text" id="reasonText"></div>
+            </div>
+
+
+            <!-- Evidence section -->
+            <div class="evidence-section" id="evidenceSection" style="display:none;">
+                <div class="section-title">Evidence Record</div>
+                <div class="evidence-grid">
+                    <div class="evidence-box">
+                        <div class="evidence-label">Record ID</div>
+                        <div class="evidence-value" id="evidenceRecordId">—</div>
+                    </div>
+                    <div class="evidence-box">
+                        <div class="evidence-label">Status</div>
+                        <div class="evidence-value" id="evidenceStatus">—</div>
+                    </div>
+                    <div class="evidence-box">
+                        <div class="evidence-label">Organisation</div>
+                        <div class="evidence-value" id="evidenceOrg">—</div>
+                    </div>
+                    <div class="evidence-box">
+                        <div class="evidence-label">Images Saved</div>
+                        <div class="evidence-value" id="evidenceImages">—</div>
+                    </div>
+                    <div class="evidence-box" style="grid-column: 1 / -1;">
+                        <div class="evidence-label">Content Hash (SHA-256)</div>
+                        <div class="evidence-value" id="evidenceHash">—</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Pending banner -->
+            <div class="warning-banner" id="pendingBanner" style="display:none;">
+                ⏳ <strong>Pending Review:</strong> AI inspection was unavailable.
+                Evidence images have been saved. Manual review is required.
+            </div>
+
+            <!-- Error details -->
+            <div id="errorDetails"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================
+     INSPECTION HISTORY
+     ============================= -->
+<div class="history-section">
+
+    <div class="history-header">
+        <div>
+            <h2>Inspection History</h2>
+            <p>Organisation-scoped record history. One org cannot see another's records.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div class="org-selector">
+                <button class="org-btn active" id="orgBtnAlpha" onclick="switchOrg('org_demo_alpha')">org_demo_alpha</button>
+                <button class="org-btn" id="orgBtnBravo" onclick="switchOrg('org_demo_bravo')">org_demo_bravo</button>
+            </div>
+            <button class="refresh-btn" onclick="loadHistory()">↻ Refresh</button>
+        </div>
+    </div>
+
+    <div class="history-table-wrapper">
+        <table class="history-table" id="historyTable">
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>Unit ID</th>
+                    <th>Order ID</th>
+                    <th>Decision</th>
+                    <th>Status</th>
+                    <th>Captured At</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                <tr>
+                    <td colspan="6" class="history-empty">Loading history…</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+</div><!-- /container -->
+
+
+<!-- =============================
+     RECORD DETAIL MODAL
+     ============================= -->
+<div class="modal-backdrop" id="recordModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">×</button>
+
+        <div id="modalContent">
+            <div class="modal-loading">Loading record…</div>
+        </div>
+    </div>
+</div>
+
+
+<!-- =============================
+     JAVASCRIPT
+     ============================= -->
+<script>
+
+/* ============================
+   STATE
+   ============================ */
+
+let selectedFiles = [];
+let currentOrg = 'org_demo_alpha';
+let orderLookupTimeout = null;
+
+
+/* ============================
+   ESCAPE HTML
+   ============================ */
+
+function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+
+/* ============================
+   FORMAT CHECK NAME
+   ============================ */
+
+function formatCheckName(name) {
+    return (name || '')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+
+/* ============================
+   VERDICT CSS CLASS
+   ============================ */
+
+function verdictClass(verdict) {
+    const v = String(verdict || '').toUpperCase();
+    if (v === 'PASS')      return 'pass';
+    if (v === 'FAIL')      return 'fail';
+    return 'uncertain';
+}
+
+
+/* ============================
+   DECISION CSS CLASS
+   ============================ */
+
+function decisionClass(decision) {
+    if (decision === 'SEAL')         return 'seal';
+    if (decision === 'STOP_AND_FIX') return 'stop';
+    return 'pending';
+}
+
+
+/* ============================
+   FORMAT DATETIME
+   ============================ */
+
+function formatDatetime(iso) {
+    if (!iso) return '—';
+    try {
+        const d = new Date(iso);
+        return d.toLocaleString('en-IN', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+            timeZone: 'Asia/Kolkata',
+        });
+    } catch { return iso; }
+}
+
+
+/* ============================
+   FORMAT FILE SIZE
+   ============================ */
+
+function formatFileSize(bytes) {
+    if (bytes < 1024)          return bytes + ' B';
+    if (bytes < 1024 * 1024)   return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+
+/* ============================
+   STATS FROM API
+   ============================ */
+
+function loadStats() {
+    fetch(`/api/stats?org=${currentOrg}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                const s = data.stats;
+                document.getElementById('stat-total').textContent   = s.total;
+                document.getElementById('stat-seal').textContent    = s.seal;
+                document.getElementById('stat-stop').textContent    = s.stop_and_fix;
+                document.getElementById('stat-pending').textContent = s.pending_review;
+            }
+        })
+        .catch(() => {
+            document.getElementById('stat-total').textContent   = '—';
+            document.getElementById('stat-seal').textContent    = '—';
+            document.getElementById('stat-stop').textContent    = '—';
+            document.getElementById('stat-pending').textContent = '—';
+        });
+}
+
+
+/* ============================
+   ORDER PREVIEW (debounced)
+   ============================ */
+
+document.getElementById('unit_id').addEventListener('input', function () {
+
+    const val = this.value.trim();
+
+    clearTimeout(orderLookupTimeout);
+
+    document.getElementById('orderPreview').classList.remove('visible');
+    document.getElementById('orderError').style.display = 'none';
+
+    if (val.length < 4) return;
+
+    orderLookupTimeout = setTimeout(() => {
+        fetchOrderPreview(val);
+    }, 500);
+});
+
+
+function fetchOrderPreview(unit_id) {
+    fetch(`/api/order/${encodeURIComponent(unit_id)}`)
+        .then(r => r.json())
+        .then(data => {
+
+            if (data.status === 'ok') {
+                document.getElementById('previewOrderId').textContent = data.order_id || '—';
+                document.getElementById('previewChannel').textContent = data.channel || '—';
+
+                const itemsEl = document.getElementById('previewItems');
+                itemsEl.innerHTML = '';
+
+                const lines = data.order_lines_parsed || [];
+
+                if (lines.length === 0) {
+                    itemsEl.innerHTML = '<div class="expected-item-row"><span style="color:var(--gray-400);font-size:12px;">No items found.</span></div>';
+                } else {
+                    lines.forEach(item => {
+                        const row = document.createElement('div');
+                        row.className = 'expected-item-row';
+                        row.innerHTML = `
+                            <div class="item-qty-badge">×${escapeHtml(String(item.quantity))}</div>
+                            <div>
+                                <div class="item-name">${escapeHtml(item.name || item.sku)}</div>
+                                <div class="item-sku">${escapeHtml(item.sku)}</div>
+                            </div>
+                        `;
+                        itemsEl.appendChild(row);
+                    });
+                }
+
+                document.getElementById('orderPreview').classList.add('visible');
+
+            } else if (data.status === 'not_found') {
+                const errEl = document.getElementById('orderError');
+                errEl.textContent = `Unit ID not found: "${unit_id}"`;
+                errEl.style.display = 'block';
+                document.getElementById('orderPreview').classList.remove('visible');
+            }
+
+        })
+        .catch(() => {
+            // Silently ignore network errors in preview
+        });
+}
+
+
+/* ============================
+   FILE PICKER
+   ============================ */
+
+function openFilePicker(event) {
+    if (event) event.stopPropagation();
+    document.getElementById('package_image').click();
+}
+
+
+/* ============================
+   HANDLE MULTIPLE FILES
+   ============================ */
+
+function handleAttachments(input) {
+    const newFiles = Array.from(input.files);
+    if (!newFiles.length) return;
+
+    newFiles.forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+
+        const already = selectedFiles.some(
+            f => f.name === file.name && f.size === file.size
+        );
+        if (!already) selectedFiles.push(file);
+    });
+
+    input.value = '';
+    renderAttachments();
+}
+
+
+/* ============================
+   RENDER ATTACHMENTS
+   ============================ */
+
+function renderAttachments() {
+    const container = document.getElementById('attachments');
+    const empty     = document.getElementById('uploadEmpty');
+    const addMore   = document.getElementById('addMoreBtn');
+    const count     = document.getElementById('photoCount');
+
+    container.innerHTML = '';
+
+    if (selectedFiles.length === 0) {
+        empty.style.display  = 'flex';
+        addMore.style.display = 'none';
+        count.style.display  = 'none';
+        return;
+    }
+
+    empty.style.display  = 'none';
+    addMore.style.display = 'block';
+    count.style.display  = 'block';
+    count.textContent    = `${selectedFiles.length} photo${selectedFiles.length === 1 ? '' : 's'} selected`;
+
+    selectedFiles.forEach((file, index) => {
+
+        const card = document.createElement('div');
+        card.className = 'attachment-card';
+
+        const img = document.createElement('img');
+        img.className = 'attachment-image';
+        img.src = URL.createObjectURL(file);
+        img.alt = file.name;
+
+        const info = document.createElement('div');
+        info.className = 'attachment-info';
+
+        const name = document.createElement('div');
+        name.className = 'attachment-name';
+        name.textContent = file.name;
+
+        const size = document.createElement('div');
+        size.className = 'attachment-size';
+        size.textContent = formatFileSize(file.size);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.title = 'Remove this photo';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeAttachment(index);
+        };
+
+        info.appendChild(name);
+        info.appendChild(size);
+
+        card.appendChild(img);
+        card.appendChild(removeBtn);
+        card.appendChild(info);
+
+        container.appendChild(card);
+    });
+}
+
+
+/* ============================
+   REMOVE ATTACHMENT
+   ============================ */
+
+function removeAttachment(index) {
+    selectedFiles.splice(index, 1);
+    renderAttachments();
+}
+
+
+/* ============================
+   DISPLAY INSPECTION RESULT
+   ============================ */
+
+function displayInspection(data) {
+
+    const inspection = data.inspection || {};
+
+    document.getElementById('resultEmpty').style.display   = 'none';
+    document.getElementById('resultContent').style.display = 'block';
+
+    const decision = inspection.decision || 'PENDING_REVIEW';
+
+    /* Decision box */
+    const decisionBox = document.getElementById('decisionBox');
+    decisionBox.className = 'decision ' + decisionClass(decision);
+
+    const icons = { SEAL: '✅', STOP_AND_FIX: '⛔', PENDING_REVIEW: '⏳' };
+    document.getElementById('decisionIcon').textContent = icons[decision] || '⚠';
+
+    if (decision === 'SEAL') {
+        document.getElementById('decisionTitle').textContent    = 'SEAL';
+        document.getElementById('decisionSubtitle').textContent = 'All checks passed. Package is ready to seal.';
+    } else if (decision === 'STOP_AND_FIX') {
+        document.getElementById('decisionTitle').textContent    = 'STOP & FIX';
+        document.getElementById('decisionSubtitle').textContent = 'One or more checks failed or are uncertain. Do not seal.';
+    } else {
+        document.getElementById('decisionTitle').textContent    = 'PENDING REVIEW';
+        document.getElementById('decisionSubtitle').textContent = 'AI inspection unavailable. Evidence saved.';
+    }
+
+    /* Meta */
+    document.getElementById('resultUnit').textContent    = escapeHtml(data.unit_id || '—');
+    document.getElementById('resultOrder').textContent   = escapeHtml(data.order_id || '—');
+    document.getElementById('resultModel').textContent   = escapeHtml(inspection.model_version || '—');
+    document.getElementById('resultLatency').textContent =
+        inspection.latency_ms ? inspection.latency_ms + ' ms' : '—';
+
+    /* Checks */
+    const checksContainer = document.getElementById('checksContainer');
+    checksContainer.innerHTML = '';
+
+    const checks = Array.isArray(inspection.checks) ? inspection.checks : [];
+
+    if (checks.length === 0 && data.status === 'pending') {
+        checksContainer.innerHTML = `
+            <div class="check check-uncertain">
+                <div class="check-top">
+                    <div class="check-name">AI Inspection Unavailable</div>
+                    <div class="verdict uncertain">UNCERTAIN</div>
+                </div>
+                <div class="check-detail">
+                    The AI model could not complete the inspection.
+                    Evidence images have been saved for manual review.
+                </div>
+            </div>
+        `;
+    } else {
+        checks.forEach(check => {
+            const verdict = String(check.verdict || 'UNCERTAIN').toUpperCase();
+            const vc = verdictClass(verdict);
+            const conf = check.confidence !== undefined
+                ? Math.round(check.confidence * 100) + '%'
+                : '—';
+
+            const el = document.createElement('div');
+            el.className = `check check-${vc}`;
+            el.innerHTML = `
+                <div class="check-top">
+                    <div class="check-name">${escapeHtml(formatCheckName(check.check_key || 'Check'))}</div>
+                    <div class="verdict ${vc}">${escapeHtml(verdict)}</div>
+                </div>
+                <div class="check-confidence">Confidence: ${escapeHtml(conf)}</div>
+                <div class="check-detail">${escapeHtml(check.detail || 'No detail provided.')}</div>
+            `;
+            checksContainer.appendChild(el);
+        });
+    }
+
+    /* Reason */
+    const reasonText = inspection.reason || '';
+    const reasonBox  = document.getElementById('reasonBox');
+    if (reasonText) {
+        document.getElementById('reasonText').textContent = reasonText;
+        reasonBox.style.display = 'block';
+    } else {
+        reasonBox.style.display = 'none';
+    }
+
+    /* Evidence section */
+    if (data.record_id) {
+        document.getElementById('evidenceRecordId').textContent = data.record_id;
+        document.getElementById('evidenceOrg').textContent      = data.org_id || '—';
+        document.getElementById('evidenceImages').textContent   = (data.images_saved || 0) + ' image(s)';
+        document.getElementById('evidenceHash').textContent     = data.content_hash || '—';
+
+        const statusEl = document.getElementById('evidenceStatus');
+        const st = data.status || 'unknown';
+        statusEl.innerHTML = `<span class="status-badge ${st}">${escapeHtml(st.toUpperCase())}</span>`;
+
+        document.getElementById('evidenceSection').style.display = 'block';
+    } else {
+        document.getElementById('evidenceSection').style.display = 'none';
+    }
+
+    /* Pending banner */
+    document.getElementById('pendingBanner').style.display =
+        (data.status === 'pending') ? 'block' : 'none';
+
+    /* Errors */
+    const errorsEl = document.getElementById('errorDetails');
+    errorsEl.innerHTML = '';
+    const errors = data.errors || [];
+    errors.forEach(err => {
+        const banner = document.createElement('div');
+        banner.className = 'error-banner';
+        banner.innerHTML = `<strong>${escapeHtml(err.type || 'Error')}:</strong> ${escapeHtml(err.detail || '')}`;
+        errorsEl.appendChild(banner);
+    });
+
+    /* Update stats */
+    loadStats();
+    loadHistory();
+}
+
+
+/* ============================
+   FORM SUBMISSION
+   ============================ */
+
+document.getElementById('inspectionForm').addEventListener('submit', async function (e) {
+
+    e.preventDefault();
+
+    const unitId = document.getElementById('unit_id').value.trim();
+
+    if (!unitId) {
+        alert('Please enter a Pack Unit ID.');
+        return;
+    }
+
+    if (selectedFiles.length === 0) {
+        alert('Please add at least one package image.');
+        return;
+    }
+
+    const btn = document.getElementById('inspectButton');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Inspecting package…';
+
+    // Update AI status
+    document.getElementById('aiStatus').innerHTML = '<div class="status-dot" style="background:#f59e0b;"></div><span>Inspecting…</span>';
+
+    const formData = new FormData();
+    formData.append('unit_id', unitId);
+    selectedFiles.forEach(file => formData.append('package_images', file));
+
+    try {
+
+        const response = await fetch('/inspect', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.status === 400 || response.status === 404) {
+            alert(data.message || 'Inspection failed.');
+            return;
+        }
+
+        // Even 5xx: try to display gracefully
+        displayInspection(data);
+
+    } catch (error) {
+
+        console.error(error);
+
+        // Network-level failure — show error state
+        document.getElementById('resultEmpty').style.display   = 'none';
+        document.getElementById('resultContent').style.display = 'block';
+
+        document.getElementById('decisionBox').className      = 'decision pending';
+        document.getElementById('decisionIcon').textContent   = '⚠';
+        document.getElementById('decisionTitle').textContent  = 'PENDING REVIEW';
+        document.getElementById('decisionSubtitle').textContent = 'Network error. Could not reach server.';
+
+        document.getElementById('pendingBanner').style.display = 'block';
+        document.getElementById('checksContainer').innerHTML   = '';
+        document.getElementById('evidenceSection').style.display = 'none';
+
+    } finally {
+
+        btn.disabled    = false;
+        btn.textContent = '🔍 Inspect Package';
+
+        document.getElementById('aiStatus').innerHTML =
+            '<div class="status-dot"></div><span>AI Inspection Ready</span>';
+    }
+
+});
+
+
+/* ============================
+   HISTORY
+   ============================ */
+
+function switchOrg(orgId) {
+    currentOrg = orgId;
+
+    document.getElementById('orgBtnAlpha').classList.toggle('active', orgId === 'org_demo_alpha');
+    document.getElementById('orgBtnBravo').classList.toggle('active', orgId === 'org_demo_bravo');
+
+    loadStats();
+    loadHistory();
+}
+
+
+function loadHistory() {
+    fetch(`/api/records?org=${currentOrg}`)
+        .then(r => r.json())
+        .then(data => {
+            renderHistory(data.records || []);
+        })
+        .catch(() => {
+            document.getElementById('historyBody').innerHTML =
+                '<tr><td colspan="6" class="history-empty">Failed to load history.</td></tr>';
+        });
+}
+
+
+function renderHistory(records) {
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '';
+
+    if (!records || records.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="history-empty">
+                    No inspection records found for <strong>${escapeHtml(currentOrg)}</strong>.
+                    Run an inspection to create records.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    records.forEach(rec => {
+        const tr = document.createElement('tr');
+        tr.onclick = () => openRecordModal(rec.record_id);
+
+        const decChip = (() => {
+            const d = rec.decision || '';
+            if (d === 'SEAL')         return `<span class="decision-chip seal">SEAL</span>`;
+            if (d === 'STOP_AND_FIX') return `<span class="decision-chip stop">STOP &amp; FIX</span>`;
+            return `<span class="decision-chip pending">${escapeHtml(d || 'PENDING')}</span>`;
+        })();
+
+        tr.innerHTML = `
+            <td class="record-id-cell">${escapeHtml(rec.record_id)}</td>
+            <td><strong>${escapeHtml(rec.unit_id)}</strong></td>
+            <td>${escapeHtml(rec.order_id)}</td>
+            <td>${decChip}</td>
+            <td><span class="status-badge ${escapeHtml(rec.status || '')}">${escapeHtml((rec.status || '').toUpperCase())}</span></td>
+            <td style="font-size:11px;color:var(--gray-500);">${escapeHtml(formatDatetime(rec.captured_at))}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+
+/* ============================
+   RECORD DETAIL MODAL
+   ============================ */
+
+function openRecordModal(recordId) {
+    const modal = document.getElementById('recordModal');
+    const content = document.getElementById('modalContent');
+
+    modal.classList.add('open');
+    content.innerHTML = '<div class="modal-loading">⏳ Loading record…</div>';
+
+    fetch(`/api/records/${encodeURIComponent(recordId)}?org=${currentOrg}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                renderModalContent(data.record);
+            } else {
+                content.innerHTML = `
+                    <div class="error-banner">
+                        ${escapeHtml(data.message || 'Record not found.')}
+                    </div>
+                `;
+            }
+        })
+        .catch(() => {
+            content.innerHTML = '<div class="error-banner">Failed to load record.</div>';
+        });
+}
+
+
+function closeModal() {
+    document.getElementById('recordModal').classList.remove('open');
+}
+
+// Close on backdrop click
+document.getElementById('recordModal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+});
+
+// Close on Escape
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+});
+
+
+function renderModalContent(record) {
+    const content = document.getElementById('modalContent');
+
+    const outcome   = record.outcome || {};
+    const subject   = record.subject || {};
+    const checks    = record.checks || [];
+    const overrides = outcome.overrides || [];
+    const errors    = record.errors || [];
+    const decision  = outcome.decision || 'PENDING_REVIEW';
+
+    const decClass = decisionClass(decision);
+    const decIcon  = decision === 'SEAL' ? '✅' : decision === 'STOP_AND_FIX' ? '⛔' : '⏳';
+    const decLabel = decision === 'STOP_AND_FIX' ? 'STOP & FIX' : decision.replace(/_/g, ' ');
+
+    let checksHtml = '';
+    checks.forEach(check => {
+        const verdict = String(check.verdict || 'UNCERTAIN').toUpperCase();
+        const vc = verdictClass(verdict);
+        const conf = check.confidence !== undefined ? Math.round(check.confidence * 100) + '%' : '—';
+        checksHtml += `
+            <div class="check check-${vc}" style="margin-bottom:8px;">
+                <div class="check-top">
+                    <div class="check-name">${escapeHtml(formatCheckName(check.check_key))}</div>
+                    <div class="verdict ${vc}">${escapeHtml(verdict)}</div>
+                </div>
+                <div class="check-confidence">Confidence: ${escapeHtml(conf)} · Model: ${escapeHtml(check.model_version || '—')} · ${escapeHtml(String(check.latency_ms || 0))} ms</div>
+                <div class="check-detail">${escapeHtml(check.detail || '')}</div>
+            </div>
+        `;
+    });
+    if (!checksHtml) checksHtml = '<p style="color:var(--gray-400);font-size:12px;">No checks recorded.</p>';
+
+    let overridesHtml = '';
+    overrides.forEach(ov => {
+        overridesHtml += `
+            <div class="override-entry">
+                <span class="override-original">${escapeHtml(ov.original_decision)}</span>
+                → <strong>${escapeHtml(ov.new_decision)}</strong>
+                by <em>${escapeHtml(ov.operator)}</em>
+                at ${escapeHtml(formatDatetime(ov.timestamp))}<br>
+                <span style="color:var(--gray-500);">Reason: ${escapeHtml(ov.reason)}</span>
+            </div>
+        `;
+    });
+
+    let errorsHtml = '';
+    errors.forEach(err => {
+        errorsHtml += `<div class="error-banner" style="margin-top:6px;"><strong>${escapeHtml(err.type)}:</strong> ${escapeHtml(err.detail)}</div>`;
+    });
+
+    const imagesHtml = (record.images || []).map(img =>
+        `<code style="font-size:10px;background:var(--gray-100);padding:2px 6px;border-radius:4px;display:inline-block;margin:2px;">${escapeHtml(img)}</code>`
+    ).join(' ') || '<span style="color:var(--gray-400);">No images recorded.</span>';
+
+    content.innerHTML = `
+        <div class="decision ${decClass}" style="margin-bottom:20px;">
+            <div class="decision-icon">${decIcon}</div>
+            <div class="decision-info">
+                <div class="decision-title">${escapeHtml(decLabel)}</div>
+                <div class="decision-subtitle">Decided by: ${escapeHtml(outcome.decided_by || '—')}</div>
+            </div>
+        </div>
+
+        <div class="modal-title">Record Detail</div>
+        <div class="modal-subtitle">${escapeHtml(record.record_id || '')} · ${escapeHtml(record.organization_id || '')}</div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">Subject</div>
+            <div class="modal-meta-grid">
+                <div class="meta-box"><div class="meta-label">Unit ID</div><div class="meta-value">${escapeHtml(subject.unit_id || '—')}</div></div>
+                <div class="meta-box"><div class="meta-label">Order ID</div><div class="meta-value">${escapeHtml(subject.order_id || '—')}</div></div>
+                <div class="meta-box"><div class="meta-label">Organisation</div><div class="meta-value">${escapeHtml(record.organization_id || '—')}</div></div>
+                <div class="meta-box"><div class="meta-label">Status</div><div class="meta-value"><span class="status-badge ${escapeHtml(record.status || '')}">${escapeHtml((record.status || '').toUpperCase())}</span></div></div>
+                <div class="meta-box"><div class="meta-label">Captured At</div><div class="meta-value" style="font-size:11px;">${escapeHtml(formatDatetime(record.captured_at))}</div></div>
+                <div class="meta-box"><div class="meta-label">Channel</div><div class="meta-value">${escapeHtml(record.channel || '—')}</div></div>
+            </div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">Evidence Images</div>
+            <div>${imagesHtml}</div>
+        </div>
+
+        <div class="modal-section">
+            <div class="modal-section-title">Inspection Checks</div>
+            ${checksHtml}
+        </div>
+
+        ${outcome.reason ? `
+        <div class="modal-section">
+            <div class="reason-box">
+                <div class="reason-label">AI Observation Summary</div>
+                <div class="reason-text">${escapeHtml(outcome.reason)}</div>
+            </div>
+        </div>` : ''}
+
+        ${overrides.length > 0 ? `
+        <div class="modal-section">
+            <div class="modal-section-title">Operator Overrides</div>
+            <div class="override-section">
+                <h4>⚠ This record has been overridden by an operator.</h4>
+                ${overridesHtml}
+            </div>
+        </div>` : ''}
+
+        <div class="modal-section">
+            <div class="modal-section-title">Record Integrity</div>
+            <div class="evidence-box">
+                <div class="evidence-label">Content Hash (SHA-256 of record JSON)</div>
+                <div class="evidence-value" style="font-size:10px;font-family:monospace;">${escapeHtml(record.content_hash || '—')}</div>
+            </div>
+        </div>
+
+        ${errorsHtml}
+    `;
+}
+
+
+/* ============================
+   INIT
+   ============================ */
+
+document.addEventListener('DOMContentLoaded', function () {
+    loadStats();
+    loadHistory();
+});
+
+</script>
+
+</body>
+</html>
